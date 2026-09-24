@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Top Hat Answer Assistant</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header><div><span class="eyebrow">MV3 ASSISTANT</span><h1>Top Hat Monitor</h1></div><span id="sessionDot" class="dot"></span></header>
+    <section class="card settings">
+      <label for="targetUrl">Target Page</label>
+      <input id="targetUrl" type="url" spellcheck="false" placeholder="https://app.tophat.com/e/847921/lecture">
+      <button id="openMock" class="text-button" type="button">Open authorized mock lab</button>
+      <fieldset><legend>Answer Mode</legend><label class="radio"><input type="radio" name="answerMode" value="openai"> OpenAI</label><label class="radio"><input type="radio" name="answerMode" value="random"> Random</label></fieldset>
+      <label for="apiKey">OpenAI API Key</label>
+      <div class="key-row"><input id="apiKey" type="password" autocomplete="off" placeholder="Not saved"><button id="clearKey" type="button" class="secondary compact">Clear</button></div>
+      <label class="check"><input id="mockFallback" type="checkbox" checked> Enable mock-only interaction fallback</label>
+      <button id="save" type="button">Save Settings</button>
+      <p id="notice" role="status"></p>
+    </section>
+    <section class="card">
+      <div class="section-title"><h2>Session</h2><span id="sessionId" class="mono">—</span></div>
+      <div class="actions"><button id="start" type="button">START</button><button id="stop" type="button" class="danger">STOP</button></div>
+    </section>
+    <section class="card status-card">
+      <h2>Status</h2>
+      <dl>
+        <div><dt>Session</dt><dd id="sessionStatus">Stopped</dd></div>
+        <div><dt>Duration</dt><dd id="duration">0m 0s</dd></div>
+        <div><dt>Page</dt><dd id="pageStatus">Not Found</dd></div>
+        <div><dt>Login</dt><dd id="loginStatus">Unknown</dd></div>
+        <div><dt>Question</dt><dd id="questionStatus">Waiting</dd></div>
+        <div><dt>Question Type</dt><dd id="questionType">—</dd></div>
+        <div><dt>Engine</dt><dd id="engine">—</dd></div>
+        <div><dt>Drag Type</dt><dd id="dragType">—</dd></div>
+        <div><dt>Interaction</dt><dd id="interaction">—</dd></div>
+      </dl>
+      <div class="result"><span>Last Result</span><pre id="lastResult">—</pre></div>
+    </section>
+    <details class="card"><summary>Session statistics</summary><pre id="statistics">No session data.</pre></details>
+    <details class="card"><summary>Runtime logs</summary><pre id="logs">No logs.</pre></details>
+    <details class="card" id="reportCard"><summary>Final session report</summary><pre id="report">No completed report.</pre></details>
+  </main>
+  <script src="lib/state.js"></script>
+  <script src="lib/sessionManager.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

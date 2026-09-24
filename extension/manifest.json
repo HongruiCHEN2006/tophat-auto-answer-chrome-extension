@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Top Hat Answer Assistant",
+  "version": "1.0.0",
+  "description": "Monitors Top Hat questions and provides structured answer assistance, with a fully automated local mock lab.",
+  "permissions": ["storage", "tabs", "scripting"],
+  "host_permissions": [
+    "https://app.tophat.com/*",
+    "https://api.openai.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Top Hat Answer Assistant",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://app.tophat.com/*"],
+      "js": [
+        "lib/selectors.js",
+        "lib/fingerprint.js",
+        "lib/questionClassifier.js",
+        "lib/questionDetector.js",
+        "lib/questionParser.js",
+        "lib/interactionVerifier.js",
+        "lib/adapters/singleChoiceAdapter.js",
+        "lib/adapters/multipleSelectAdapter.js",
+        "lib/adapters/textAdapter.js",
+        "lib/adapters/numericAdapter.js",
+        "lib/adapters/formulaAdapter.js",
+        "lib/adapters/sortingAdapter.js",
+        "lib/adapters/matchingAdapter.js",
+        "lib/interactionRouter.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

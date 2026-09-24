@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en" data-thaa-authorized-test="true">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Authorized Question Automation Lab</title>
+  <link rel="stylesheet" href="mock.css">
+</head>
+<body>
+  <header class="hero"><div><span>LOCAL / AUTHORIZED</span><h1>Question Automation Lab</h1><p>Exercise every parser, provider, adapter, verification path, and recovery state without touching a graded page.</p></div><div id="timer" data-thaa-timer>00:45</div></header>
+  <main>
+    <aside class="panel controls">
+      <h2>Simulation controls</h2>
+      <label>Question type<select id="scenario"></select></label>
+      <label>Sorting mechanism<select id="sortVariant"><option value="native">Native HTML5 drag</option><option value="pointer">Pointer/framework drag</option><option value="direct">Direct DOM sortable</option></select></label>
+      <label>Matching mechanism<select id="matchVariant"><option value="dropdown">Dropdown matching</option><option value="drag">Drag matching</option></select></label>
+      <div class="button-grid"><button id="replace">New question</button><button id="rerender">DOM rerender</button><button id="expire">Expire question</button><button id="toggleLogin">Require login</button><button id="resetTimer">Reset timer</button><button id="dragFailure">Force drag failure</button></div>
+      <p class="hint">Open the extension popup, choose <b>Random</b>, save this mock as the target, then press <b>START</b>.</p>
+    </aside>
+    <section class="stage">
+      <div id="login" class="login-page panel" hidden><h2>Login required</h2><p>This simulates an expired Top Hat session. Use the control at left to restore the lecture.</p><form action="/login"><input type="email" aria-label="Email"><input type="password" aria-label="Password"><button type="button">Sign in manually</button></form></div>
+      <div id="questionMount"></div>
+      <section class="panel"><h2>Submission history</h2><ol id="history"><li>No submissions yet.</li></ol></section>
+    </section>
+  </main>
+  <script src="../lib/selectors.js"></script>
+  <script src="../lib/fingerprint.js"></script>
+  <script src="../lib/questionClassifier.js"></script>
+  <script src="../lib/questionDetector.js"></script>
+  <script src="../lib/questionParser.js"></script>
+  <script src="../lib/interactionVerifier.js"></script>
+  <script src="../lib/adapters/singleChoiceAdapter.js"></script>
+  <script src="../lib/adapters/multipleSelectAdapter.js"></script>
+  <script src="../lib/adapters/textAdapter.js"></script>
+  <script src="../lib/adapters/numericAdapter.js"></script>
+  <script src="../lib/adapters/formulaAdapter.js"></script>
+  <script src="../lib/adapters/sortingAdapter.js"></script>
+  <script src="../lib/adapters/matchingAdapter.js"></script>
+  <script src="../lib/interactionRouter.js"></script>
+  <script src="mock.js"></script>
+  <script src="../content.js"></script>
+</body>
+</html>
