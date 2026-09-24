@@ -48,10 +48,12 @@ async function evaluate(cdp, expression) {
   await delay(1200);
   assert.equal(await evaluate(page, "document.title"), "Authorized Question Automation Lab");
   const setup = await evaluate(page, `(async () => {
+    const denied = await chrome.runtime.sendMessage({type:"SAVE_SETTINGS",settings:{targetUrl:location.href,answerMode:"random",authorizedTopHatAutomation:true,mockFallbackEnabled:true}});
     const save = await chrome.runtime.sendMessage({type:"SAVE_SETTINGS",settings:{targetUrl:location.href,answerMode:"random",mockFallbackEnabled:true}});
     const start = await chrome.runtime.sendMessage({type:"START_SESSION"});
-    return {save,start};
+    return {denied,save,start};
   })()`);
+  assert.equal(setup.denied.ok, false);
   assert.equal(setup.save.ok, true, setup.save.error);
   assert.equal(setup.start.ok, true, setup.start.error);
   await delay(1800);

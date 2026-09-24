@@ -1,13 +1,15 @@
 # Top Hat Answer Assistant
 
-A plain-JavaScript Chrome/Edge Manifest V3 extension that monitors Top Hat lecture questions, produces structured answers with either OpenAI or a local random provider, and keeps real `app.tophat.com` pages strictly **assistance-only**. The packaged mock lab is the only target on which the extension automatically fills controls, performs/falls back from drag interactions, and clicks Submit.
+A plain-JavaScript Chrome/Edge Manifest V3 extension that monitors Top Hat lecture questions and produces structured answers with either OpenAI or a local random provider. Real `app.tophat.com` pages remain assistance-only by default; owners of an authorized test course can explicitly enable automatic selection and submission for the exact saved Top Hat URL.
 
 The project is directly loadable; there is no build step and no runtime dependency installation.
 
 ## Safety boundary
 
-- Real Top Hat pages: detect, parse, classify, answer, cache, display, log, and report only. The extension never selects or submits a graded answer there.
+- Real Top Hat pages default to assistance-only. Automatic selection and submission requires the explicit ownership/authorization checkbox and a valid saved Top Hat course URL.
+- Authorization is checked in the trusted background worker and passed to the content script only for the selected target tab. Merely visiting another Top Hat page does not enable automation.
 - Packaged mock page: explicitly authorized full automation, including Submit.
+- Mock-only direct-DOM fallbacks are never used on real Top Hat pages; a real interaction must pass application-state verification before Submit is clicked.
 - Top Hat credentials, cookies, and passwords are never read or stored.
 - The OpenAI key is stored only in `chrome.storage.local`. Storage access is restricted to trusted extension contexts when the browser supports `setAccessLevel`.
 - The API key is never injected into a page, URL, log, report, or console message.
@@ -73,7 +75,7 @@ The project is directly loadable; there is no build step and no runtime dependen
 | `answerEngine.js` | Selects the provider, validates results locally, and permits at most one necessary retry. |
 | `openaiProvider.js` | Uses the Responses API with type-specific strict JSON Schemas and bounded output tokens. |
 | `randomProvider.js` | Entirely local generation of structurally valid test answers; it never calls OpenAI. |
-| `interactionRouter.js` | Enforces the assistance-only/mock-automation boundary and selects the appropriate adapter. |
+| `interactionRouter.js` | Enforces the explicit authorization boundary and selects the appropriate adapter. |
 | `interactionVerifier.js` | Reads selected/value/order/matching state after an attempt; visual movement alone is insufficient. |
 | `mock/*` | Authorized local lab for all question, auth, timer, rerender, replacement, expiration, drag, and fallback paths. |
 
@@ -106,7 +108,7 @@ DOM mutation or 3-second fallback
   → RandomProvider or OpenAIProvider
   → local schema/ID validation
   → cache result as READY
-  → assistance-only result OR authorized mock adapter
+  → assistance-only result OR explicitly authorized interaction adapter
   → verify interaction
   → per-question record + statistics
 ```
@@ -156,9 +158,11 @@ Before sorting or matching, the adapter examines semantic and structural signals
 - `FRAMEWORK_MANAGED_DRAG`
 - `UNKNOWN_DRAG`
 
-Signals include `draggable`, matching `<select>` controls, ARIA/list roles, pointer/mouse sortable markers, known drag-library patterns, and explicit mock test markers. An unknown or framework-managed mechanism on a real page is reported, never forced.
+Signals include `draggable`, matching `<select>` controls, ARIA/list roles, pointer/mouse sortable markers, known drag-library patterns, and explicit mock test markers. Authorized pages attempt the detected native, pointer, mouse, or framework-style event sequence and verify the resulting application state.
 
 In the authorized mock only, failure can use a deterministic direct-state fallback. The record retains `fallbackUsed` and the initial failure reason before Submit is clicked.
+
+On an authorized real Top Hat target, Submit is clicked only after verification succeeds. If Top Hat changes its framework or rejects synthetic drag events, the result is preserved as an interaction failure instead of submitting an unverified answer.
 
 ## Interaction verification
 
@@ -198,6 +202,16 @@ Outcomes are stored separately from answer generation as `INTERACTION_SUCCESS`, 
 7. Press **START**.
 
 The prototype calls `gpt-4o-mini` directly from the trusted service worker. For a production-distributed extension, do not ship user API credentials in browser storage; use an authenticated backend proxy with appropriate abuse controls.
+
+## Enable automation for an authorized Top Hat test course
+
+1. Create or open a Top Hat course that you own or are explicitly authorized to automate.
+2. Paste that course's exact `https://app.tophat.com/e/{course_id}` or `/lecture` URL into **Target Page**.
+3. Select OpenAI or Random mode.
+4. Check **I own/control this target course and authorize automatic selection and submission on its exact Top Hat URL**.
+5. Click **Save Settings**, open that exact target page, and press **START**.
+
+The authorization setting defaults to off and persists in local extension state. Unchecking it returns real Top Hat pages to assistance-only behavior. Standard choices and text-like inputs are filled through their native controls; sorting and matching use the detected drag/drop or dropdown mechanism. The extension verifies the resulting state before clicking Submit and records any unsupported framework interaction without using the mock-only DOM fallback.
 
 ## Use Random mode
 
@@ -300,8 +314,9 @@ Replace the saved key. Authentication failures are not retried. The key is unrel
 **OpenAI returns 429 or 5xx / network timeout**  
 The extension retries once, then records `API_FAILED` or `API_TIMEOUT`. It never loops.
 
-**Sorting/matching result is ready but interaction is unsupported**  
-That is expected on real Top Hat pages. The result remains visible in the popup/report. Mock drag mechanisms may use the authorized fallback and record it.
+**A real Top Hat answer is generated but not submitted**
+
+Confirm that the ownership/authorization checkbox is enabled for the saved target URL. If the failure is sorting or matching, Top Hat may be using a drag framework that rejects synthetic events; the extension deliberately preserves the result and avoids submitting when application state cannot be verified.
 
 **Background tab was discarded or reloaded**  
 The worker and content script restore persisted session state and reconnect. Chrome can still throttle background pages; no refresh keep-alive is used.
@@ -314,4 +329,4 @@ Reload the extension from the extensions page after changing source files. Exist
 
 ## Architectural reference
 
-The project was reimplemented from scratch. [`blackspider-ops/TopHat_AutoAnswer`](https://github.com/blackspider-ops/TopHat_AutoAnswer) was consulted only for broad ideas around an MV3 layout, MutationObserver monitoring, three-second fallback scans, and dynamic Top Hat navigation. No auto-submission behavior from that project is used on real Top Hat pages.
+The project was reimplemented from scratch. [`blackspider-ops/TopHat_AutoAnswer`](https://github.com/blackspider-ops/TopHat_AutoAnswer) was consulted only for broad ideas around an MV3 layout, MutationObserver monitoring, three-second fallback scans, and dynamic Top Hat navigation. Authorized interaction, verification, and submission controls are implemented independently in this project.

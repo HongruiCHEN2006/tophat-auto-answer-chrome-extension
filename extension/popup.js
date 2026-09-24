@@ -34,12 +34,13 @@ async function initialize() {
   const state = response.state; render(state); $("targetUrl").value = state.settings.targetUrl;
   document.querySelector(`input[name='answerMode'][value='${state.settings.answerMode}']`).checked = true;
   $("apiKey").placeholder = state.settings.hasApiKey ? "Saved ••••••••••••••••" : "Not saved"; $("mockFallback").checked = state.settings.mockFallbackEnabled !== false;
+  $("authorizedTopHatAutomation").checked = state.settings.authorizedTopHatAutomation === true;
   refreshTimer = setInterval(updateDuration, 1000);
 }
 $("apiKey").addEventListener("input", () => { keyDirty = true; clearRequested = false; });
 $("clearKey").addEventListener("click", () => { $("apiKey").value = ""; keyDirty = false; clearRequested = true; notice("Key will be removed when settings are saved."); });
 $("save").addEventListener("click", async () => {
-  const settings = { targetUrl: $("targetUrl").value.trim(), answerMode: document.querySelector("input[name='answerMode']:checked")?.value, mockFallbackEnabled: $("mockFallback").checked, clearApiKey: clearRequested };
+  const settings = { targetUrl: $("targetUrl").value.trim(), answerMode: document.querySelector("input[name='answerMode']:checked")?.value, mockFallbackEnabled: $("mockFallback").checked, authorizedTopHatAutomation: $("authorizedTopHatAutomation").checked, clearApiKey: clearRequested };
   if (keyDirty) settings.apiKey = $("apiKey").value.trim();
   const response = await request("SAVE_SETTINGS", { settings });
   if (!response?.ok) return notice(response?.error || "Save failed", "error");

@@ -4,9 +4,10 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const extension = path.join(__dirname, "..", "extension");
-const context = vm.createContext({ console, setTimeout, clearTimeout, crypto: require("node:crypto").webcrypto, Math, Date, JSON, Object, Array, Set, Map, String, Number, Boolean, RegExp, Error });
+const context = vm.createContext({ console, setTimeout, clearTimeout, crypto: require("node:crypto").webcrypto, Math, Date, JSON, Object, Array, Set, Map, String, Number, Boolean, RegExp, Error, URL,
+  location:{ href:"https://app.tophat.com/e/test-course/lecture" }, chrome:{ runtime:{ getURL:(file) => `chrome-extension://test/${file}` } } });
 context.globalThis = context;
-for (const file of ["lib/state.js", "lib/logger.js", "lib/fingerprint.js", "lib/randomProvider.js", "lib/openaiProvider.js", "lib/answerEngine.js", "lib/sessionManager.js"]) {
+for (const file of ["lib/state.js", "lib/logger.js", "lib/fingerprint.js", "lib/randomProvider.js", "lib/openaiProvider.js", "lib/answerEngine.js", "lib/sessionManager.js", "lib/interactionRouter.js"]) {
   vm.runInContext(fs.readFileSync(path.join(extension, file), "utf8"), context, { filename: file });
 }
 const T = context.THAA;
@@ -19,6 +20,13 @@ test("fingerprints are deterministic, normalized, and timer-independent", () => 
   assert.notEqual(a, T.fingerprintQuestion({ ...single, options:[...single.options,{id:"C",text:"Golgi"}] }));
   const sorting = { type:"SORTING", prompt:"Order", items:[{id:"A",text:"Earth"},{id:"B",text:"Atom"}] };
   assert.equal(T.fingerprintQuestion(sorting), T.fingerprintQuestion({ ...sorting, items:[...sorting.items].reverse() }));
+});
+
+test("real Top Hat automation is default-off and requires the explicit trusted authorization signal", () => {
+  assert.equal(T.defaultState().settings.authorizedTopHatAutomation, false);
+  assert.equal(T.isAuthorizedTopHat({}, "https://app.tophat.com/e/123/lecture"), false);
+  assert.equal(T.isAuthorizedTopHat({ authorizedTopHat:true }, "https://app.tophat.com/e/123/lecture"), true);
+  assert.equal(T.isAuthorizedTopHat({ authorizedTopHat:true }, "https://example.com/e/123/lecture"), false);
 });
 
 test("random provider returns locally valid results for every supported type", () => {

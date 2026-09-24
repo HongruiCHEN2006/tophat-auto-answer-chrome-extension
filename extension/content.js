@@ -100,7 +100,10 @@
       try { current = T.parseQuestion(container, T.classifyQuestion(container)); }
       catch (error) { return { interaction: { success: false, status: "PARSING_FAILED", reason: error.message } }; }
       if (T.fingerprintQuestion(current) !== message.fingerprint) return { interaction: { success: false, status: "QUESTION_CHANGED", reason: "Visible question changed before interaction" } };
-      const interaction = await T.interactionRouter(message.question, message.result, container, { allowTestFallback: true });
+      const interaction = await T.interactionRouter(message.question, message.result, container, {
+        authorizedTopHat: message.authorizedTopHat === true,
+        allowTestFallback: message.allowTestFallback === true
+      });
       return { interaction };
     }
   }

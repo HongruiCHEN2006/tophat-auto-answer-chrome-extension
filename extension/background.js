@@ -96,7 +96,7 @@ async function processQuestion(fingerprint) {
     });
     return;
   }
-  let tabId, question, result, shouldInteract = false;
+  let tabId, question, result, shouldInteract = false, authorizedTopHat = false, allowTestFallback = false;
   await mutate((s) => {
     const record = s.processedQuestions[fingerprint]; if (!record) return;
     if (!s.session.running || s.currentQuestion?.fingerprint !== fingerprint) {
@@ -111,15 +111,22 @@ async function processQuestion(fingerprint) {
     s.currentQuestion = { fingerprint, type: record.type, status: "READY", result: outcome.result, engine: outcome.engine, interactionStatus: "INTERACTION_PENDING" };
     T.appendLog(s, "ANSWER", "Answer ready");
     tabId = s.targetTabId; question = record.question; result = outcome.result;
-    shouldInteract = s.settings.targetUrl === mockUrl();
+    const isMock = s.settings.targetUrl === mockUrl();
+    authorizedTopHat = s.settings.authorizedTopHatAutomation === true && isTopHatUrl(s.settings.targetUrl);
+    allowTestFallback = isMock && s.settings.mockFallbackEnabled !== false;
+    shouldInteract = isMock || authorizedTopHat;
     if (!shouldInteract) {
-      record.interaction = { type: ["SORTING", "MATCHING"].includes(record.type) ? "UNKNOWN_DRAG" : "ASSISTANCE_ONLY", status: "INTERACTION_UNSUPPORTED", attempts: 0, reason: "Real Top Hat pages are assistance-only" };
+      record.interaction = { type: ["SORTING", "MATCHING"].includes(record.type) ? "UNKNOWN_DRAG" : "ASSISTANCE_ONLY", status: "INTERACTION_UNSUPPORTED", attempts: 0, reason: "Authorized Top Hat automation is disabled for this target" };
       record.finalStatus = "ANSWER_READY"; s.statistics.interaction.unsupported += 1; s.statistics.byType[record.type].interactionUnsupported += 1;
       s.currentQuestion.interactionStatus = "INTERACTION_UNSUPPORTED";
     }
   });
   if (!shouldInteract || !tabId) return;
-  const response = await sendToTab(tabId, { type: "APPLY_ANSWER", fingerprint, question, result });
+  const response = await sendToTab(tabId, {
+    type: "APPLY_ANSWER", fingerprint, question, result,
+    authorizedTopHat,
+    allowTestFallback
+  });
   await mutate((s) => {
     const record = s.processedQuestions[fingerprint]; if (!record) return;
     const interaction = response?.interaction || { success: false, status: "INTERACTION_FAILED", interactionType: "UNKNOWN_DRAG", reason: "Content script did not return an interaction result" };
@@ -166,10 +173,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "SAVE_SETTINGS") {
       if (!isValidTargetUrl(message.settings?.targetUrl)) return { ok: false, error: "Use a Top Hat course/lecture URL or the packaged mock URL." };
       if (!["openai", "random"].includes(message.settings.answerMode)) return { ok: false, error: "Invalid answer mode." };
+      if (message.settings.authorizedTopHatAutomation === true && !isTopHatUrl(message.settings.targetUrl)) return { ok: false, error: "Authorized Top Hat automation requires an exact Top Hat course/lecture URL." };
       if (message.settings.clearApiKey) await T.setApiKey("");
       else if (typeof message.settings.apiKey === "string") await T.setApiKey(message.settings.apiKey);
       const hasApiKey = Boolean(await T.getApiKey());
-      await mutate((s) => { s.settings = { ...s.settings, targetUrl: message.settings.targetUrl, answerMode: message.settings.answerMode, hasApiKey, mockFallbackEnabled: message.settings.mockFallbackEnabled !== false }; T.appendLog(s, "STATE", "Settings saved"); });
+      await mutate((s) => { s.settings = { ...s.settings, targetUrl: message.settings.targetUrl, answerMode: message.settings.answerMode, hasApiKey, authorizedTopHatAutomation: message.settings.authorizedTopHatAutomation === true, mockFallbackEnabled: message.settings.mockFallbackEnabled !== false }; T.appendLog(s, "STATE", `Settings saved; authorized Top Hat automation ${message.settings.authorizedTopHatAutomation === true ? "enabled" : "disabled"}`); });
       return { ok: true };
     }
     if (message.type === "START_SESSION") {

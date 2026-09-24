@@ -21,22 +21,45 @@
     scope.dispatchEvent(new CustomEvent("thaa:sorted", { bubbles: true, detail: { order } }));
     return true;
   }
+  const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  function point(node) {
+    const rect = node.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  }
+  function mouse(node, type, p, buttons) {
+    node.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX: p.x, clientY: p.y, button: 0, buttons }));
+  }
+  async function performDrag(source, target, interactionType) {
+    if (!source || !target || source === target) return false;
+    source.scrollIntoView?.({ block: "center", inline: "center" });
+    const from = point(source), to = point(target);
+    if (interactionType === "NATIVE_HTML5_DRAG" && typeof DataTransfer !== "undefined" && typeof DragEvent !== "undefined") {
+      const data = new DataTransfer();
+      source.dispatchEvent(new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer: data, clientX: from.x, clientY: from.y }));
+      target.dispatchEvent(new DragEvent("dragenter", { bubbles: true, cancelable: true, dataTransfer: data, clientX: to.x, clientY: to.y }));
+      target.dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: data, clientX: to.x, clientY: to.y }));
+      target.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: data, clientX: to.x, clientY: to.y }));
+      source.dispatchEvent(new DragEvent("dragend", { bubbles: true, cancelable: true, dataTransfer: data, clientX: to.x, clientY: to.y }));
+    } else if (["POINTER_EVENT_DRAG", "FRAMEWORK_MANAGED_DRAG"].includes(interactionType) && typeof PointerEvent !== "undefined") {
+      source.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, pointerId: 1, pointerType: "mouse", isPrimary: true, clientX: from.x, clientY: from.y, button: 0, buttons: 1 }));
+      document.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, cancelable: true, pointerId: 1, pointerType: "mouse", isPrimary: true, clientX: to.x, clientY: to.y, buttons: 1 }));
+      target.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true, pointerId: 1, pointerType: "mouse", isPrimary: true, clientX: to.x, clientY: to.y, button: 0, buttons: 0 }));
+    } else if (interactionType === "MOUSE_EVENT_DRAG") {
+      mouse(source, "mousedown", from, 1); mouse(document, "mousemove", to, 1); mouse(target, "mouseup", to, 0);
+    } else return false;
+    await pause(80);
+    return true;
+  }
   async function sortingAdapter(question, result, container, options = {}) {
     const scope = root.THAA.queryFirst(container, root.THAA.SELECTORS.sortingContainers) || container;
     const interactionType = detectDragInteractionType(scope);
     let attempted = false;
-    if (interactionType === "NATIVE_HTML5_DRAG" && typeof DataTransfer !== "undefined") {
-      const nodes = root.THAA.queryAll(scope, root.THAA.SELECTORS.sortingItems);
-      const byId = new Map(nodes.map((n, i) => [root.THAA.itemId(n, i, "I"), n]));
-      for (const id of result.order) {
-        const node = byId.get(id), target = scope.lastElementChild;
-        if (!node || !target) continue;
-        const data = new DataTransfer();
-        node.dispatchEvent(new DragEvent("dragstart", { bubbles: true, dataTransfer: data }));
-        target.dispatchEvent(new DragEvent("drop", { bubbles: true, dataTransfer: data }));
-        node.dispatchEvent(new DragEvent("dragend", { bubbles: true, dataTransfer: data }));
+    if (["NATIVE_HTML5_DRAG", "POINTER_EVENT_DRAG", "MOUSE_EVENT_DRAG", "FRAMEWORK_MANAGED_DRAG"].includes(interactionType)) {
+      for (let desiredIndex = 0; desiredIndex < result.order.length; desiredIndex += 1) {
+        const nodes = root.THAA.queryAll(scope, root.THAA.SELECTORS.sortingItems);
+        const source = nodes.find((node, i) => root.THAA.itemId(node, i, "I") === result.order[desiredIndex]);
+        if (source && source !== nodes[desiredIndex]) attempted = (await performDrag(source, nodes[desiredIndex], interactionType)) || attempted;
       }
-      attempted = true;
     } else if (interactionType === "DIRECT_DOM_SORTABLE") attempted = directSort(scope, result.order);
     if (root.THAA.verifyInteraction(question, result, container)) return { success: true, interactionType };
     const initialReason = attempted ? "Drag completed visually but application state was not verified" : `${interactionType} could not be automated safely`;
@@ -46,5 +69,5 @@
     return { success: false, interactionType, reason: initialReason, verificationFailed: attempted };
   }
   root.THAA = root.THAA || {};
-  Object.assign(root.THAA, { detectDragInteractionType, directSort, sortingAdapter });
+  Object.assign(root.THAA, { detectDragInteractionType, directSort, performDrag, sortingAdapter });
 })(globalThis);

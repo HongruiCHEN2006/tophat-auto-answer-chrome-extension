@@ -35,6 +35,7 @@
         targetUrl: "https://app.tophat.com/e/847921/lecture",
         answerMode: "random",
         hasApiKey: false,
+        authorizedTopHatAutomation: false,
         mockFallbackEnabled: true
       },
       session: { id: null, running: false, startedAt: null, endedAt: null, durationMs: 0 },

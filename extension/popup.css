@@ -11,6 +11,7 @@ h1 { margin:2px 0 0; font-size:21px; letter-spacing:-.03em; } h2 { font-size:13p
 input[type=url],input[type=password] { width:100%; border:1px solid var(--line); border-radius:8px; background:#0d1119; color:var(--text); padding:9px 10px; outline:none; }
 input:focus { border-color:var(--accent2); box-shadow:0 0 0 3px #54a8ff22; }
 fieldset { border:0; margin:2px 0; padding:0; display:flex; gap:18px; } legend { float:left; margin-right:12px; }.radio,.check { color:var(--text); font-weight:500; }
+.warning-check { padding:9px; border:1px solid #ffb45455; border-radius:8px; background:#ffb45412; color:#ffd59a; }
 button { border:0; border-radius:8px; padding:9px 13px; color:#06130d; background:var(--accent); font-weight:800; cursor:pointer; }
 button:hover:not(:disabled) { filter:brightness(1.08); } button:disabled { opacity:.42; cursor:not-allowed; }
 .secondary { background:#242b39; color:var(--text); }.compact { padding:8px 10px; }.danger { background:var(--danger); color:#220308; flex:1; }.actions button:first-child { flex:1; }
