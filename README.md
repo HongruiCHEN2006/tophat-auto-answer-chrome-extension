@@ -4,12 +4,20 @@ A plain-JavaScript Chrome/Edge Manifest V3 extension that monitors Top Hat lectu
 
 The project is directly loadable; there is no build step and no runtime dependency installation.
 
+The extension can continue monitoring an open Top Hat tab while you use other tabs or applications, but still subject to browser background-execution limitations.
+
+Please note that this extension relies on Top Hat's current user interface and page structure. If Top Hat updates or redesigns its interface, some features of the extension may stop working and require corresponding updates. I will stop updating this repository after finishing college. 
+Last Update: 9/24/2026 
+
+
 ## Disclaimer
 This extension is for educational and accessibility purposes only. Users are responsible for:
 
 Following their institution's academic integrity policies
 Complying with TopHat's terms of service
 Understanding that automated participation may not reflect actual learning
+
+Don't ever use this on exams.
 
 ## Safety boundary
 
