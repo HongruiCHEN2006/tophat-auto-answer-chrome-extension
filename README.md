@@ -4,6 +4,13 @@ A plain-JavaScript Chrome/Edge Manifest V3 extension that monitors Top Hat lectu
 
 The project is directly loadable; there is no build step and no runtime dependency installation.
 
+## Disclaimer
+This extension is for educational and accessibility purposes only. Users are responsible for:
+
+Following their institution's academic integrity policies
+Complying with TopHat's terms of service
+Understanding that automated participation may not reflect actual learning
+
 ## Safety boundary
 
 - Real Top Hat pages default to assistance-only. Automatic selection and submission requires the explicit ownership/authorization checkbox and a valid saved Top Hat course URL.
