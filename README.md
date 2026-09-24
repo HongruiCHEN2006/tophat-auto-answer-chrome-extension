@@ -6,7 +6,8 @@ The project is directly loadable; there is no build step and no runtime dependen
 
 The extension can continue monitoring an open Top Hat tab while you use other tabs or applications, but still subject to browser background-execution limitations.
 
-Please note that this extension relies on Top Hat's current user interface and page structure. If Top Hat updates or redesigns its interface, some features of the extension may stop working and require corresponding updates. I will stop updating this repository after finishing college. 
+Please note that this extension relies on Top Hat's current user interface and page structure. If Top Hat updates or redesigns its interface, some features of the extension may stop working and require corresponding updates.
+
 Last Update: 9/24/2026 
 
 
@@ -14,10 +15,25 @@ Last Update: 9/24/2026
 This extension is for educational and accessibility purposes only. Users are responsible for:
 
 Following their institution's academic integrity policies
+
 Complying with TopHat's terms of service
+
 Understanding that automated participation may not reflect actual learning
 
 Don't ever use this on exams.
+
+## Features
+
+* Chrome and Microsoft Edge support through Manifest V3
+* OpenAI and fully local Random answer modes
+* Background monitoring with `MutationObserver` and a 3-second fallback scan
+* Persistent sessions, runtime logs, statistics, and final session reports
+* Support for single-choice, multiple-select, text, numeric, formula, sorting, and matching questions
+* Duplicate-question suppression through deterministic fingerprints
+* Automatic recovery after page reloads, service-worker suspension, and login interruptions
+* Structured OpenAI API responses with minimized token usage
+* Built-in mock lab for authorized end-to-end testing
+
 
 ## Safety boundary
 
